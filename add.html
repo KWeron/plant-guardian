@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodaj roślinę - Plant Guardian</title>
+    <title>Dodaj Roślinę - Plant Guardian</title>
     <link rel="stylesheet" href="style.css">
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,50 +23,56 @@
     </nav>
 
     <div class="container">
-        <div class="form-container">
-            <h1 style="color: var(--primary-green); margin-bottom: 2rem;">🌱 Dodaj nową roślinę</h1>
+        <h1 style="color: var(--primary-green); margin-bottom: 2rem;">Dodaj nową roślinę</h1>
 
+        <div class="form-container">
             <form id="add-plant-form">
                 <div class="form-group">
                     <label for="plant-name">Nazwa rośliny *</label>
-                    <input type="text" id="plant-name" name="name" required placeholder="np. Moja Monstera">
-                </div>
-
-                <div class="form-group">
-                    <label for="plant-species">Gatunek</label>
-                    <input type="text" id="plant-species" name="species" placeholder="np. Monstera Deliciosa">
-                </div>
-
-                <div class="image-search-group">
-                    <div class="form-group">
-                        <label for="image-url">URL zdjęcia</label>
-                        <input type="url" id="image-url" name="image_url" placeholder="https://...">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="plant-name" name="name" required style="flex: 1;">
+                        <button type="button" class="btn btn-accent" id="search-plant-btn" style="white-space: nowrap;">
+                            🔍 Szukaj w bazie
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-accent" id="auto-search-btn">
-                        Znajdź zdjęcie (Auto)
-                    </button>
-                </div>
-
-                <!-- Image Preview -->
-                <div class="image-preview" id="image-preview-container">
-                    <img id="image-preview" src="" alt="Podgląd zdjęcia">
                 </div>
 
                 <div class="form-group">
-                    <label for="water-frequency">Częstotliwość podlewania (dni)</label>
-                    <input type="number" id="water-frequency" name="water_frequency" min="1" placeholder="np. 7">
+                    <label for="plant-species">Gatunek (nazwa naukowa)</label>
+                    <input type="text" id="plant-species" name="species">
                 </div>
 
                 <div class="form-group">
-                    <label for="last-watered">Data ostatniego podlewania</label>
-                    <input type="date" id="last-watered" name="last_watered">
+                    <label for="water-frequency">Częstotliwość podlewania (dni) *</label>
+                    <input type="number" id="water-frequency" name="water_frequency" min="1" required>
                 </div>
 
-                <div class="action-buttons">
-                    <button type="submit" class="btn btn-primary">✓ Dodaj roślinę</button>
-                    <a href="dashboard.html" class="btn btn-secondary">Anuluj</a>
+                <div class="form-group">
+                    <label for="last-watered">Data ostatniego podlewania *</label>
+                    <input type="date" id="last-watered" name="last_watered" required>
                 </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Dodaj roślinę</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal for Plant Selection -->
+    <div id="plant-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Wybierz roślinę z bazy</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modal-loading" class="hidden">
+                    <p>⏳ Szukam w bazie...</p>
+                </div>
+                <div id="modal-results"></div>
+                <div id="modal-error" class="hidden">
+                    <p style="color: #dc2626;">Nie znaleziono roślin. Spróbuj innej nazwy.</p>
+                </div>
+            </div>
         </div>
     </div>
 

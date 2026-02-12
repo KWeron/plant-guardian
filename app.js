@@ -121,13 +121,13 @@ async function checkAuthentication() {
 // ========================================
 
 /**
- * Search for plant image and watering info using Perenual API
- * @param {string} plantName - Name of the plant to search for
- * @returns {object} - Object with imageUrl, wateringFrequency, and scientificName
+ * Fetch plant data from Perenual API
+ * @param {string} query - Plant name to search
+ * @returns {array} - Array of plant objects
  */
-async function searchPlantImage(plantName) {
+async function fetchPlantData(query) {
     try {
-        const searchQuery = encodeURIComponent(plantName);
+        const searchQuery = encodeURIComponent(query);
         const url = `https://perenual.com/api/species-list?key=${PERENUAL_API_KEY}&q=${searchQuery}`;
         
         const response = await fetch(url);
@@ -139,110 +139,148 @@ async function searchPlantImage(plantName) {
         const data = await response.json();
         
         if (data.data && data.data.length > 0) {
-            const plant = data.data[0];
-            
-            // Extract watering frequency (convert from text to days)
-            let wateringDays = null;
-            if (plant.watering) {
-                const watering = plant.watering.toLowerCase();
-                if (watering.includes('frequent') || watering.includes('average')) {
-                    wateringDays = 3; // Every 3 days
-                } else if (watering.includes('minimum')) {
-                    wateringDays = 7; // Once a week
-                } else if (watering.includes('rare')) {
-                    wateringDays = 14; // Every 2 weeks
-                } else {
-                    wateringDays = 5; // Default
-                }
-            }
-            
-            return {
-                imageUrl: plant.default_image?.original_url || plant.default_image?.regular_url || null,
-                wateringFrequency: wateringDays,
-                scientificName: plant.scientific_name?.[0] || null
-            };
+            return data.data;
         } else {
-            throw new Error('No plants found');
+            return [];
         }
     } catch (error) {
         console.error('Perenual API error:', error);
-        
-        // Fallback to Unsplash Source
-        return {
-            imageUrl: `https://source.unsplash.com/600x400/?${encodeURIComponent(plantName)},plant`,
-            wateringFrequency: null,
-            scientificName: null
-        };
+        throw error;
     }
 }
 
 /**
- * Handle auto image search button click (for add.html)
+ * Convert watering text to days
+ * @param {string} watering - Watering frequency text from API
+ * @returns {number} - Number of days
  */
-async function handleAutoImageSearch() {
+function convertWateringToDays(watering) {
+    if (!watering) return null;
+    
+    const wateringLower = watering.toLowerCase();
+    
+    if (wateringLower.includes('frequent')) {
+        return 3; // Every 3 days
+    } else if (wateringLower.includes('average')) {
+        return 7; // Once a week
+    } else if (wateringLower.includes('minimum')) {
+        return 14; // Every 2 weeks
+    } else {
+        return 7; // Default to weekly
+    }
+}
+
+/**
+ * Translate sunlight requirements to Polish
+ * @param {string|array} sunlight - Sunlight data from API
+ * @returns {string} - Polish translation
+ */
+function translateSunlightToPolish(sunlight) {
+    if (!sunlight) return '';
+    
+    const sunlightArray = Array.isArray(sunlight) ? sunlight : [sunlight];
+    
+    const translations = {
+        'full sun': 'Pełne słońce',
+        'full shade': 'Pełny cień',
+        'part shade': 'Półcień',
+        'part sun': 'Częściowe słońce',
+        'filtered shade': 'Przefiltrowany cień',
+        'sun': 'Słońce',
+        'shade': 'Cień'
+    };
+    
+    const translated = sunlightArray.map(item => {
+        const itemLower = item.toLowerCase();
+        return translations[itemLower] || item;
+    });
+    
+    return translated.join(', ');
+}
+
+/**
+ * Handle plant search button click - show modal with results
+ */
+async function handlePlantSearch() {
     const plantNameInput = document.getElementById('plant-name');
-    const plantSpeciesInput = document.getElementById('plant-species');
-    const imageUrlInput = document.getElementById('image-url');
-    const imagePreview = document.getElementById('image-preview');
-    const waterFrequencyInput = document.getElementById('water-frequency');
-    const searchButton = document.getElementById('auto-search-btn');
+    const modal = document.getElementById('plant-modal');
+    const modalLoading = document.getElementById('modal-loading');
+    const modalResults = document.getElementById('modal-results');
+    const modalError = document.getElementById('modal-error');
     
     const plantName = plantNameInput?.value || '';
-    const plantSpecies = plantSpeciesInput?.value || '';
     
-    if (!plantName && !plantSpecies) {
-        alert('Podaj nazwę lub gatunek rośliny, aby wyszukać zdjęcie!');
+    if (!plantName) {
+        alert('Podaj nazwę rośliny!');
         return;
     }
     
-    const searchQuery = plantSpecies || plantName;
-    
-    // Show loading state
-    if (searchButton) {
-        searchButton.innerHTML = '⏳ Szukam...';
-        searchButton.disabled = true;
-    }
+    // Show modal and loading
+    modal.classList.add('active');
+    modalLoading.classList.remove('hidden');
+    modalResults.innerHTML = '';
+    modalError.classList.add('hidden');
     
     try {
-        const plantData = await searchPlantImage(searchQuery);
+        const plants = await fetchPlantData(plantName);
         
-        // Set image URL to input and preview
-        if (imageUrlInput && plantData.imageUrl) {
-            imageUrlInput.value = plantData.imageUrl;
+        modalLoading.classList.add('hidden');
+        
+        if (plants.length === 0) {
+            modalError.classList.remove('hidden');
+            return;
         }
         
-        if (imagePreview && plantData.imageUrl) {
-            imagePreview.src = plantData.imageUrl;
-            imagePreview.classList.add('visible');
-        }
-        
-        // Auto-fill watering frequency if available
-        if (waterFrequencyInput && plantData.wateringFrequency) {
-            waterFrequencyInput.value = plantData.wateringFrequency;
-        }
-        
-        // Auto-fill scientific name if available and species field is empty
-        if (plantSpeciesInput && plantData.scientificName && !plantSpecies) {
-            plantSpeciesInput.value = plantData.scientificName;
-        }
-        
-        // Success state
-        if (searchButton) {
-            searchButton.innerHTML = '✓ Znaleziono!';
-            setTimeout(() => {
-                searchButton.innerHTML = '🔍 Znajdź zdjęcie (Auto)';
-                searchButton.disabled = false;
-            }, 2000);
-        }
+        // Display results
+        plants.forEach(plant => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'plant-result-item';
+            resultItem.innerHTML = `
+                <h3>${plant.common_name || 'Nieznana nazwa'}</h3>
+                <p>${plant.scientific_name?.[0] || 'Brak nazwy naukowej'}</p>
+            `;
+            
+            resultItem.addEventListener('click', () => selectPlant(plant));
+            modalResults.appendChild(resultItem);
+        });
     } catch (error) {
-        console.error('Error searching for image:', error);
-        alert('Nie udało się znaleźć zdjęcia. Spróbuj ponownie lub wpisz URL ręcznie.');
-        
-        if (searchButton) {
-            searchButton.innerHTML = '🔍 Znajdź zdjęcie (Auto)';
-            searchButton.disabled = false;
-        }
+        modalLoading.classList.add('hidden');
+        modalError.classList.remove('hidden');
     }
+}
+
+/**
+ * Handle plant selection from modal
+ */
+function selectPlant(plant) {
+    // Auto-fill form fields (only basic fields now)
+    const plantNameInput = document.getElementById('plant-name');
+    const plantSpeciesInput = document.getElementById('plant-species');
+    const waterFrequencyInput = document.getElementById('water-frequency');
+    
+    // Fill in the data
+    if (plantNameInput) {
+        plantNameInput.value = plant.common_name || '';
+    }
+    
+    if (plantSpeciesInput) {
+        plantSpeciesInput.value = plant.scientific_name?.[0] || '';
+    }
+    
+    if (waterFrequencyInput && plant.watering) {
+        waterFrequencyInput.value = convertWateringToDays(plant.watering);
+    }
+    
+    // Close modal
+    closeModal();
+}
+
+/**
+ * Close modal
+ */
+function closeModal() {
+    const modal = document.getElementById('plant-modal');
+    modal.classList.remove('active');
 }
 
 // ========================================
@@ -295,6 +333,10 @@ async function addPlant(plantData) {
                 image_url: plantData.image_url || null,
                 water_frequency: plantData.water_frequency || null,
                 last_watered: plantData.last_watered || new Date().toISOString().split('T')[0],
+                sunlight: plantData.sunlight || null,
+                care_level: plantData.care_level || null,
+                toxicity: plantData.toxicity !== undefined ? plantData.toxicity : null,
+                description: plantData.description || null,
             }])
             .select();
         
@@ -462,13 +504,12 @@ async function renderDashboard() {
 }
 
 /**
- * Create a plant card element
+ * Create a plant card element (text-only, no images)
  */
 function createPlantCard(plant) {
     const card = document.createElement('div');
     card.className = 'plant-card';
     
-    const defaultImage = 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=400';
     const needsWatering = needsWater(plant.last_watered, plant.water_frequency);
     const wateringStatus = getWateringStatus(plant.last_watered, plant.water_frequency);
     
@@ -478,28 +519,43 @@ function createPlantCard(plant) {
     }
     
     card.innerHTML = `
-        <img src="${plant.image_url || defaultImage}" 
-             alt="${plant.name}" 
-             class="plant-card-image"
-             onerror="this.src='${defaultImage}'">
-        <div class="plant-card-content">
+        <div class="plant-card-header">
             <h3>${plant.name}</h3>
-            <div class="plant-info">
-                <span>🌿 Gatunek: ${plant.species || 'Nieznany'}</span>
-                <span>💧 Podlewanie: co ${plant.water_frequency || '?'} dni</span>
-                <span>📅 Ostatnio podlana: ${plant.last_watered || 'Nieznane'}</span>
-                ${needsWatering ? `<span class="water-alert" style="color: ${wateringStatus.color}; font-weight: bold;">${wateringStatus.message}</span>` : ''}
+            ${plant.species ? `<p class="species-name"><em>${plant.species}</em></p>` : ''}
+        </div>
+        
+        <div class="plant-info">
+            <div class="info-row">
+                <span class="info-label">💧 Podlewanie:</span>
+                <span class="info-value">Co ${plant.water_frequency || '?'} dni</span>
             </div>
-            <div class="plant-card-actions">
-                ${needsWatering ? `
-                    <button class="btn btn-primary btn-small quick-water-btn" onclick="event.stopPropagation(); quickWater('${plant.id}')">
-                        💧 Podlej teraz
-                    </button>
-                ` : ''}
-                <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); window.location.href='details.html?id=${plant.id}'">
-                    Szczegóły
+            
+            ${plant.sunlight ? `
+            <div class="info-row">
+                <span class="info-label">☀️ Nałonecznienie:</span>
+                <span class="info-value">${plant.sunlight}</span>
+            </div>
+            ` : ''}
+            
+            <div class="info-row">
+                <span class="info-label">📅 Ostatnio podlana:</span>
+                <span class="info-value">${plant.last_watered || 'Nieznane'}</span>
+            </div>
+            
+            <div class="watering-status" style="color: ${wateringStatus.color};">
+                ${wateringStatus.message}
+            </div>
+        </div>
+        
+        <div class="plant-actions">
+            ${needsWatering ? `
+                <button class="btn btn-primary btn-small quick-water-btn" onclick="event.stopPropagation(); quickWater('${plant.id}')">
+                    💧 Podlej teraz
                 </button>
-            </div>
+            ` : ''}
+            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); window.location.href='details.html?id=${plant.id}'">
+                Szczegóły
+            </button>
         </div>
     `;
     
@@ -538,7 +594,7 @@ async function quickWater(plantId) {
 }
 
 /**
- * Render plant details page
+ * Render plant details page (text-only, no images)
  */
 async function renderPlantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -557,27 +613,35 @@ async function renderPlantDetails() {
         return;
     }
     
-    // Update page elements
-    const defaultImage = 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800';
+    // Update page with text-only content
+    const wateringStatus = getWateringStatus(plant.last_watered, plant.water_frequency);
     
-    document.getElementById('plant-image').src = plant.image_url || defaultImage;
-    document.getElementById('plant-name').textContent = plant.name;
-    document.getElementById('plant-species').textContent = `Gatunek: ${plant.species || 'Nieznany'}`;
-    document.getElementById('water-frequency').textContent = `Co ${plant.water_frequency || '?'} dni`;
-    document.getElementById('last-watered').textContent = plant.last_watered || 'Nieznane';
-    
-    // Calculate next watering date and status
+    // Calculate next watering
+    let nextWateringText = 'Nieznane';
     if (plant.last_watered && plant.water_frequency) {
         const lastWatered = new Date(plant.last_watered);
         const nextWatering = new Date(lastWatered);
         nextWatering.setDate(nextWatering.getDate() + plant.water_frequency);
-        document.getElementById('next-watering').textContent = nextWatering.toISOString().split('T')[0];
-        
-        // Use the watering status function
-        const wateringStatus = getWateringStatus(plant.last_watered, plant.water_frequency);
-        const statusElement = document.getElementById('watering-status');
-        statusElement.textContent = wateringStatus.message;
-        statusElement.style.color = wateringStatus.color;
+        nextWateringText = nextWatering.toISOString().split('T')[0];
+    }
+    
+    // Update DOM elements
+    document.getElementById('plant-name').textContent = plant.name;
+    document.getElementById('plant-species').textContent = `Gatunek: ${plant.species || 'Nieznany'}`;
+    document.getElementById('water-frequency').textContent = `Co ${plant.water_frequency || '?'} dni`;
+    document.getElementById('last-watered').textContent = plant.last_watered || 'Nieznane';
+    document.getElementById('next-watering').textContent = nextWateringText;
+    
+    const statusElement = document.getElementById('watering-status');
+    statusElement.textContent = wateringStatus.message;
+    statusElement.style.color = wateringStatus.color;
+    
+    // Add sunlight info if exists
+    if (plant.sunlight) {
+        const sunlightEl = document.getElementById('plant-sunlight');
+        if (sunlightEl) {
+            sunlightEl.textContent = plant.sunlight;
+        }
     }
     
     // Setup action buttons
@@ -632,10 +696,11 @@ async function handleAddPlantForm(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
+    
+    // Only collect basic plant data
     const plantData = {
         name: formData.get('name'),
         species: formData.get('species'),
-        image_url: formData.get('image_url'),
         water_frequency: parseInt(formData.get('water_frequency')) || null,
         last_watered: formData.get('last_watered'),
     };
@@ -722,24 +787,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lastWateredInput.valueAsDate = new Date();
             }
             
-            // Setup image preview
-            const imageUrlInput = document.getElementById('image-url');
-            const imagePreview = document.getElementById('image-preview');
-            if (imageUrlInput && imagePreview) {
-                imageUrlInput.addEventListener('input', function() {
-                    if (this.value) {
-                        imagePreview.src = this.value;
-                        imagePreview.classList.add('visible');
-                    } else {
-                        imagePreview.classList.remove('visible');
-                    }
-                });
+            // Setup plant search button
+            const searchPlantBtn = document.getElementById('search-plant-btn');
+            if (searchPlantBtn) {
+                searchPlantBtn.addEventListener('click', handlePlantSearch);
             }
             
-            // Setup auto search button
-            const autoSearchBtn = document.getElementById('auto-search-btn');
-            if (autoSearchBtn) {
-                autoSearchBtn.addEventListener('click', handleAutoImageSearch);
+            // Setup modal close button
+            const closeModalBtn = document.querySelector('.close-modal');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeModal);
+            }
+            
+            // Close modal on outside click
+            const modal = document.getElementById('plant-modal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
             }
             
             // Setup form submission
