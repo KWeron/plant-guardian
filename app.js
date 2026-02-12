@@ -10,8 +10,8 @@
 const SUPABASE_URL = 'https://kchryjbzelncvriufpre.supabase.co'; // e.g., https://xxxxx.supabase.co
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjaHJ5amJ6ZWxuY3ZyaXVmcHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MDk4ODksImV4cCI6MjA4NjQ4NTg4OX0.1iSm-TdB0g4WfyB0TIeh7ncqYdT4IjPKyJWLBjRmlzA';
 
-// Pixabay API Key (Replace with your actual key from https://pixabay.com/api/docs/)
-const PIXABAY_API_KEY = '54631146-8dddee92f5e389d5dd266b899';
+// Perenual API Key (Replace with your actual key from https://perenual.com/docs/api)
+const PERENUAL_API_KEY = 'sk-VSbx698e24b05003214808';
 
 // Initialize Supabase Client
 let sb;
@@ -104,8 +104,9 @@ async function checkAuthentication() {
     
     // List of protected pages
     const protectedPages = ['dashboard.html', 'add.html', 'details.html'];
-    const currentPage = window.location.pathname.split('/').pop();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
+    // Only redirect if on a protected page AND not authenticated
     if (protectedPages.includes(currentPage) && !user) {
         alert('Musisz być zalogowany, aby uzyskać dostęp do tej strony.');
         window.location.href = 'index.html';
@@ -116,37 +117,62 @@ async function checkAuthentication() {
 }
 
 // ========================================
-// 3. PIXABAY API INTEGRATION
+// 3. PERENUAL API INTEGRATION
 // ========================================
 
 /**
- * Search for plant image using Pixabay API
+ * Search for plant image and watering info using Perenual API
+ * @param {string} plantName - Name of the plant to search for
+ * @returns {object} - Object with imageUrl, wateringFrequency, and scientificName
  */
 async function searchPlantImage(plantName) {
     try {
-        const searchQuery = encodeURIComponent(plantName + ' plant');
-        const url = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${searchQuery}&image_type=photo&per_page=3`;
+        const searchQuery = encodeURIComponent(plantName);
+        const url = `https://perenual.com/api/species-list?key=${PERENUAL_API_KEY}&q=${searchQuery}`;
         
         const response = await fetch(url);
         
         if (!response.ok) {
-            throw new Error('Pixabay API request failed');
+            throw new Error('Perenual API request failed');
         }
         
         const data = await response.json();
         
-        if (data.hits && data.hits.length > 0) {
-            // Return the first image URL (webformatURL is medium quality)
-            return data.hits[0].webformatURL;
+        if (data.data && data.data.length > 0) {
+            const plant = data.data[0];
+            
+            // Extract watering frequency (convert from text to days)
+            let wateringDays = null;
+            if (plant.watering) {
+                const watering = plant.watering.toLowerCase();
+                if (watering.includes('frequent') || watering.includes('average')) {
+                    wateringDays = 3; // Every 3 days
+                } else if (watering.includes('minimum')) {
+                    wateringDays = 7; // Once a week
+                } else if (watering.includes('rare')) {
+                    wateringDays = 14; // Every 2 weeks
+                } else {
+                    wateringDays = 5; // Default
+                }
+            }
+            
+            return {
+                imageUrl: plant.default_image?.original_url || plant.default_image?.regular_url || null,
+                wateringFrequency: wateringDays,
+                scientificName: plant.scientific_name?.[0] || null
+            };
         } else {
-            throw new Error('No images found');
+            throw new Error('No plants found');
         }
     } catch (error) {
-        console.error('Pixabay API error:', error);
+        console.error('Perenual API error:', error);
         
-        // Fallback to Unsplash Source (no API key required, but less reliable)
-        const fallbackUrl = `https://source.unsplash.com/600x400/?${encodeURIComponent(plantName)},plant`;
-        return fallbackUrl;
+        // Fallback to Unsplash Source
+        return {
+            imageUrl: `https://source.unsplash.com/600x400/?${encodeURIComponent(plantName)},plant`,
+            wateringFrequency: null,
+            scientificName: null
+        };
     }
 }
 
@@ -158,6 +184,7 @@ async function handleAutoImageSearch() {
     const plantSpeciesInput = document.getElementById('plant-species');
     const imageUrlInput = document.getElementById('image-url');
     const imagePreview = document.getElementById('image-preview');
+    const waterFrequencyInput = document.getElementById('water-frequency');
     const searchButton = document.getElementById('auto-search-btn');
     
     const plantName = plantNameInput?.value || '';
@@ -177,16 +204,26 @@ async function handleAutoImageSearch() {
     }
     
     try {
-        const imageUrl = await searchPlantImage(searchQuery);
+        const plantData = await searchPlantImage(searchQuery);
         
         // Set image URL to input and preview
-        if (imageUrlInput) {
-            imageUrlInput.value = imageUrl;
+        if (imageUrlInput && plantData.imageUrl) {
+            imageUrlInput.value = plantData.imageUrl;
         }
         
-        if (imagePreview) {
-            imagePreview.src = imageUrl;
+        if (imagePreview && plantData.imageUrl) {
+            imagePreview.src = plantData.imageUrl;
             imagePreview.classList.add('visible');
+        }
+        
+        // Auto-fill watering frequency if available
+        if (waterFrequencyInput && plantData.wateringFrequency) {
+            waterFrequencyInput.value = plantData.wateringFrequency;
+        }
+        
+        // Auto-fill scientific name if available and species field is empty
+        if (plantSpeciesInput && plantData.scientificName && !plantSpecies) {
+            plantSpeciesInput.value = plantData.scientificName;
         }
         
         // Success state
@@ -628,6 +665,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Page-specific initialization
     switch (currentPage) {
+        case 'index.html':
+        case '':
+            // Setup login and register buttons
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            if (loginBtn) {
+                loginBtn.addEventListener('click', async () => {
+                    const email = emailInput?.value || '';
+                    const password = passwordInput?.value || '';
+                    
+                    if (!email || !password) {
+                        alert('Podaj email i hasło!');
+                        return;
+                    }
+                    
+                    await loginUser(email, password);
+                });
+            }
+            
+            if (registerBtn) {
+                registerBtn.addEventListener('click', async () => {
+                    const email = emailInput?.value || '';
+                    const password = passwordInput?.value || '';
+                    
+                    if (!email || !password) {
+                        alert('Podaj email i hasło!');
+                        return;
+                    }
+                    
+                    if (password.length < 6) {
+                        alert('Hasło musi mieć minimum 6 znaków!');
+                        return;
+                    }
+                    
+                    await registerUser(email, password);
+                });
+            }
+            break;
+            
         case 'dashboard.html':
             await renderDashboard();
             break;

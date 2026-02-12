@@ -503,6 +503,32 @@ nav a:hover {
     line-height: 1.8;
 }
 
+/* Back Navigation (Details Page) */
+.back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--light-text);
+    color: var(--primary-green);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.back-nav:hover {
+    background: var(--pale-green);
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.back-nav::before {
+    content: "←";
+    font-size: 1.2rem;
+}
+
 /* Footer */
 footer {
     background: var(--primary-green);

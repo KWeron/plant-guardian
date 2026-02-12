@@ -16,7 +16,6 @@
             <a href="index.html" class="logo">Plant Guardian</a>
             <ul>
                 <li><a href="index.html">Strona główna</a></li>
-                <li><a href="about.html">O projekcie</a></li>
             </ul>
         </div>
     </nav>
@@ -27,9 +26,24 @@
             <p>Twój osobisty asystent w pielęgnacji roślin</p>
             <p>Śledź harmonogram podlewania, zarządzaj swoimi roślinami i nigdy nie zapomnij o ich potrzebach!</p>
 
-            <div class="hero-buttons">
-                <a href="dashboard.html" class="btn btn-primary">Zaloguj się</a>
-                <a href="dashboard.html" class="btn btn-secondary">Zarejestruj się</a>
+            <!-- Login/Register Form -->
+            <div class="form-container"
+                style="max-width: 400px; margin: 2rem auto 0 auto; background: rgba(255, 255, 255, 0.9);">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="twoj@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" name="password" placeholder="Minimum 6 znaków" minlength="6"
+                        required>
+                </div>
+
+                <div class="hero-buttons">
+                    <button type="button" class="btn btn-primary" id="login-btn">Zaloguj się</button>
+                    <button type="button" class="btn btn-secondary" id="register-btn">Zarejestruj się</button>
+                </div>
             </div>
         </section>
 
