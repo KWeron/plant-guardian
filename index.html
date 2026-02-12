@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Guardian - Twój Opiekun Roślin</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="index.html">Strona główna</a></li>
+                <li><a href="about.html">O projekcie</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <h1>🌱 Plant Guardian</h1>
+            <p>Twój osobisty asystent w pielęgnacji roślin</p>
+            <p>Śledź harmonogram podlewania, zarządzaj swoimi roślinami i nigdy nie zapomnij o ich potrzebach!</p>
+
+            <div class="hero-buttons">
+                <a href="dashboard.html" class="btn btn-primary">Zaloguj się</a>
+                <a href="dashboard.html" class="btn btn-secondary">Zarejestruj się</a>
+            </div>
+        </section>
+
+        <section style="margin-top: 3rem;">
+            <h2 style="text-align: center; color: var(--primary-green); margin-bottom: 2rem;">Dlaczego Plant Guardian?
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div
+                    style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💧</div>
+                    <h3 style="color: var(--secondary-green); margin-bottom: 0.5rem;">Przypomnienia o podlewaniu</h3>
+                    <p>Nigdy nie zapomnij o podlaniu swoich roślin dzięki inteligentnym powiadomieniom</p>
+                </div>
+                <div
+                    style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                    <h3 style="color: var(--secondary-green); margin-bottom: 0.5rem;">Zarządzanie kolekcją</h3>
+                    <p>Śledź wszystkie swoje rośliny w jednym miejscu z łatwym dostępem</p>
+                </div>
+                <div
+                    style="text-align: center; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                    <h3 style="color: var(--secondary-green); margin-bottom: 0.5rem;">Automatyczne wyszukiwanie</h3>
+                    <p>Znajdź zdjęcia swoich roślin jednym kliknięciem</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Supabase client (configuration will be added later)
+        // const supabaseUrl = 'YOUR_SUPABASE_URL';
+        // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        // const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+</body>
+
+</html>

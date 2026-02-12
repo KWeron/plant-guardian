@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Plant Guardian</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="dashboard.html">Moje rośliny</a></li>
+                <li><a href="add.html">Dodaj roślinę</a></li>
+                <li><a href="about.html">O projekcie</a></li>
+                <li><a href="index.html" id="logout-btn">Wyloguj</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="color: var(--primary-green);">Moje rośliny</h1>
+            <a href="add.html" class="btn btn-primary">+ Dodaj nową roślinę</a>
+        </div>
+
+        <!-- Plants Grid -->
+        <div class="plants-grid" id="plants-container">
+            <!-- Plant cards will be dynamically added here -->
+            <!-- Example static cards for preview -->
+            <div class="plant-card" onclick="window.location.href='details.html'">
+                <img src="https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400" alt="Roślina"
+                    class="plant-card-image">
+                <div class="plant-card-content">
+                    <h3>Monstera Deliciosa</h3>
+                    <div class="plant-info">
+                        <span>🌿 Gatunek: Monstera</span>
+                        <span>💧 Podlewanie: co 7 dni</span>
+                        <span>📅 Ostatnio podlana: 2026-02-10</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="plant-card" onclick="window.location.href='details.html'">
+                <img src="https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400" alt="Roślina"
+                    class="plant-card-image">
+                <div class="plant-card-content">
+                    <h3>Fikus</h3>
+                    <div class="plant-info">
+                        <span>🌿 Gatunek: Ficus</span>
+                        <span>💧 Podlewanie: co 5 dni</span>
+                        <span>📅 Ostatnio podlana: 2026-02-08</span>
+                    </div>
+                </div>
+            </div>
+            <section class="dashboard-plants">
+                <div class="plants-grid" id="plants-container">
+                    <!-- Plant cards will be dynamically added here -->
+                </div>
+
+                <!-- Empty State -->
+                <article id="empty-state" class="hidden"
+                    style="text-align: center; padding: 4rem; background: white; border-radius: 16px; margin-top: 2rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🌱</div>
+                    <h2 style="color: var(--primary-green); margin-bottom: 1rem;">Nie masz jeszcze żadnych roślin</h2>
+                    <p style="margin-bottom: 2rem; color: #666;">Dodaj swoją pierwszą roślinę i zacznij ją pielęgnować!
+                    </p>
+                    <a href="add.html" class="btn btn-primary">+ Dodaj pierwszą roślinę</a>
+                </article>
+            </section>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+        </footer>
+
+        <script src="app.js"></script>
+</body>
+
+</html>

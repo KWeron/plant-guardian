@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodaj roślinę - Plant Guardian</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="dashboard.html">Moje rośliny</a></li>
+                <li><a href="add.html">Dodaj roślinę</a></li>
+                <li><a href="about.html">O projekcie</a></li>
+                <li><a href="index.html">Wyloguj</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h1 style="color: var(--primary-green); margin-bottom: 2rem;">🌱 Dodaj nową roślinę</h1>
+
+            <form id="add-plant-form">
+                <div class="form-group">
+                    <label for="plant-name">Nazwa rośliny *</label>
+                    <input type="text" id="plant-name" name="name" required placeholder="np. Moja Monstera">
+                </div>
+
+                <div class="form-group">
+                    <label for="plant-species">Gatunek</label>
+                    <input type="text" id="plant-species" name="species" placeholder="np. Monstera Deliciosa">
+                </div>
+
+                <div class="image-search-group">
+                    <div class="form-group">
+                        <label for="image-url">URL zdjęcia</label>
+                        <input type="url" id="image-url" name="image_url" placeholder="https://...">
+                    </div>
+                    <button type="button" class="btn btn-accent" id="auto-search-btn">
+                        Znajdź zdjęcie (Auto)
+                    </button>
+                </div>
+
+                <!-- Image Preview -->
+                <div class="image-preview" id="image-preview-container">
+                    <img id="image-preview" src="" alt="Podgląd zdjęcia">
+                </div>
+
+                <div class="form-group">
+                    <label for="water-frequency">Częstotliwość podlewania (dni)</label>
+                    <input type="number" id="water-frequency" name="water_frequency" min="1" placeholder="np. 7">
+                </div>
+
+                <div class="form-group">
+                    <label for="last-watered">Data ostatniego podlewania</label>
+                    <input type="date" id="last-watered" name="last_watered">
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">✓ Dodaj roślinę</button>
+                    <a href="dashboard.html" class="btn btn-secondary">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

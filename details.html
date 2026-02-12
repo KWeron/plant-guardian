@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szczegóły rośliny - Plant Guardian</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="dashboard.html">Moje rośliny</a></li>
+                <li><a href="add.html">Dodaj roślinę</a></li>
+                <li><a href="about.html">O projekcie</a></li>
+                <li><a href="index.html">Wyloguj</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;">
+            <a href="dashboard.html"
+                style="color: var(--primary-green); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                ← Powrót do listy roślin
+            </a>
+        </nav>
+
+        <article class="plant-details" id="plant-details-container">
+            <!-- Plant details will be loaded here -->
+            <!-- Static example for preview -->
+            <img src="https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=800" alt="Roślina"
+                class="plant-details-image" id="plant-image">
+
+            <section class="plant-details-content">
+                <h1 id="plant-name">Monstera Deliciosa</h1>
+                <p id="plant-species" style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">Gatunek: Monstera</p>
+
+                <section class="detail-info">
+                    <div class="detail-item">
+                        <strong>💧 Częstotliwość podlewania</strong>
+                        <span id="water-frequency">Co 7 dni</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>📅 Ostatnio podlana</strong>
+                        <span id="last-watered">2026-02-10</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>⏰ Następne podlewanie</strong>
+                        <span id="next-watering">2026-02-17</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>📊 Status</strong>
+                        <span id="watering-status" style="color: var(--secondary-green); font-weight: bold;">✓ W
+                            porządku</span>
+                    </div>
+                </section>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="water-now-btn">💧 Podlej teraz</button>
+                    <button class="btn btn-secondary" id="edit-btn">✏️ Edytuj</button>
+                    <button class="btn" style="background: #dc2626; color: white;" id="delete-btn">🗑️ Usuń</button>
+                </div>
+            </section>
+        </article>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
