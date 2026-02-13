@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dziennik pielęgnacji - Plant Guardian</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="dashboard.html">Moje rośliny</a></li>
+                <li><a href="add.html">Dodaj roślinę</a></li>
+                <li><a href="index.html">Wyloguj</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="margin-bottom: 1.5rem;">
+            <a href="dashboard.html" class="back-nav">
+                Powrót do listy roślin
+            </a>
+        </div>
+
+        <h1 style="color: var(--primary-green); margin-bottom: 0.5rem;" id="journal-title">
+            📓 Dziennik pielęgnacji
+        </h1>
+        <p id="journal-plant-name" style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;"></p>
+
+        <!-- Add care log form -->
+        <div class="form-container" style="margin-bottom: 2.5rem;">
+            <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Dodaj wpis do dziennika</h2>
+            <form id="care-log-form">
+                <div class="form-group">
+                    <label for="log-date">Data zabiegu *</label>
+                    <input type="date" id="log-date" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="log-type">Typ zabiegu *</label>
+                    <select id="log-type" name="type" required>
+                        <option value="">-- Wybierz typ --</option>
+                        <option value="oprysk">🧴 Oprysk</option>
+                        <option value="przycinanie">✂️ Przycinanie</option>
+                        <option value="pasożyty">🐛 Pasożyty</option>
+                        <option value="nawożenie">🌱 Nawożenie</option>
+                    </select>
+                </div>
+
+                <div id="field-pest-name" class="form-group">
+                    <label for="log-pest-name">Nazwa szkodnika (opcjonalne)</label>
+                    <input type="text" id="log-pest-name" name="pest_name" placeholder="np. mączlik, przędziorek">
+                </div>
+
+                <div id="field-medicine-name" class="form-group">
+                    <label for="log-medicine-name">Preparat</label>
+                    <input type="text" id="log-medicine-name" name="medicine_name" placeholder="np. Confidor, Topsin">
+                </div>
+
+                <div id="field-concentration" class="form-group">
+                    <label for="log-concentration">Stężenie</label>
+                    <input type="text" id="log-concentration" name="concentration" placeholder="np. 0,5 ml/l">
+                </div>
+
+                <div class="form-group">
+                    <label for="log-notes">Notatki</label>
+                    <textarea id="log-notes" name="notes" rows="3" placeholder="Dodatkowe informacje..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Dodaj wpis</button>
+            </form>
+        </div>
+
+        <!-- Care logs list -->
+        <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">📋 Historia zabiegów</h2>
+
+        <div id="logs-empty" class="hidden" style="text-align: center; padding: 2rem; color: #666;">
+            <p>Brak wpisów w dzienniku. Dodaj pierwszy wpis powyżej!</p>
+        </div>
+
+        <div id="logs-container">
+            <!-- Logs will be rendered here -->
+        </div>
+
+        <!-- AI Analysis -->
+        <div style="margin-top: 2rem; text-align: center;">
+            <button class="btn btn-accent" id="ai-analyze-btn" style="font-size: 1.05rem; padding: 0.85rem 2rem;">
+                🤖 Analizuj historię przez AI
+            </button>
+        </div>
+
+        <div id="ai-response" class="ai-response-container hidden">
+            <!-- AI analysis will be rendered here -->
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

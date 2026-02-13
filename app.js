@@ -8,10 +8,13 @@
 
 // Supabase Configuration (Replace with your actual values)
 const SUPABASE_URL = 'https://kchryjbzelncvriufpre.supabase.co'; // e.g., https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjaHJ5amJ6ZWxuY3ZyaXVmcHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MDk4ODksImV4cCI6MjA4NjQ4NTg4OX0.1iSm-TdB0g4WfyB0TIeh7ncqYdT4IjPKyJWLBjRmlzA';
+const SUPABASE_ANON_KEY = '';
 
 // Perenual API Key (Replace with your actual key from https://perenual.com/docs/api)
-const PERENUAL_API_KEY = 'sk-VSbx698e24b05003214808';
+const PERENUAL_API_KEY = '';
+
+// Google Gemini API Key (Replace with your actual key from https://aistudio.google.com/app/apikey)
+const GEMINI_API_KEY = '';
 
 // Initialize Supabase Client
 let sb;
@@ -101,18 +104,18 @@ async function getCurrentUser() {
  */
 async function checkAuthentication() {
     const user = await getCurrentUser();
-    
+
     // List of protected pages
     const protectedPages = ['dashboard.html', 'add.html', 'details.html'];
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
+
     // Only redirect if on a protected page AND not authenticated
     if (protectedPages.includes(currentPage) && !user) {
         alert('Musisz być zalogowany, aby uzyskać dostęp do tej strony.');
         window.location.href = 'index.html';
         return false;
     }
-    
+
     return user;
 }
 
@@ -129,15 +132,15 @@ async function fetchPlantData(query) {
     try {
         const searchQuery = encodeURIComponent(query);
         const url = `https://perenual.com/api/species-list?key=${PERENUAL_API_KEY}&q=${searchQuery}`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error('Perenual API request failed');
         }
-        
+
         const data = await response.json();
-        
+
         if (data.data && data.data.length > 0) {
             return data.data;
         } else {
@@ -156,9 +159,9 @@ async function fetchPlantData(query) {
  */
 function convertWateringToDays(watering) {
     if (!watering) return null;
-    
+
     const wateringLower = watering.toLowerCase();
-    
+
     if (wateringLower.includes('frequent')) {
         return 3; // Every 3 days
     } else if (wateringLower.includes('average')) {
@@ -177,9 +180,9 @@ function convertWateringToDays(watering) {
  */
 function translateSunlightToPolish(sunlight) {
     if (!sunlight) return '';
-    
+
     const sunlightArray = Array.isArray(sunlight) ? sunlight : [sunlight];
-    
+
     const translations = {
         'full sun': 'Pełne słońce',
         'full shade': 'Pełny cień',
@@ -189,12 +192,12 @@ function translateSunlightToPolish(sunlight) {
         'sun': 'Słońce',
         'shade': 'Cień'
     };
-    
+
     const translated = sunlightArray.map(item => {
         const itemLower = item.toLowerCase();
         return translations[itemLower] || item;
     });
-    
+
     return translated.join(', ');
 }
 
@@ -207,30 +210,30 @@ async function handlePlantSearch() {
     const modalLoading = document.getElementById('modal-loading');
     const modalResults = document.getElementById('modal-results');
     const modalError = document.getElementById('modal-error');
-    
+
     const plantName = plantNameInput?.value || '';
-    
+
     if (!plantName) {
         alert('Podaj nazwę rośliny!');
         return;
     }
-    
+
     // Show modal and loading
     modal.classList.add('active');
     modalLoading.classList.remove('hidden');
     modalResults.innerHTML = '';
     modalError.classList.add('hidden');
-    
+
     try {
         const plants = await fetchPlantData(plantName);
-        
+
         modalLoading.classList.add('hidden');
-        
+
         if (plants.length === 0) {
             modalError.classList.remove('hidden');
             return;
         }
-        
+
         // Display results
         plants.forEach(plant => {
             const resultItem = document.createElement('div');
@@ -239,7 +242,7 @@ async function handlePlantSearch() {
                 <h3>${plant.common_name || 'Nieznana nazwa'}</h3>
                 <p>${plant.scientific_name?.[0] || 'Brak nazwy naukowej'}</p>
             `;
-            
+
             resultItem.addEventListener('click', () => selectPlant(plant));
             modalResults.appendChild(resultItem);
         });
@@ -257,20 +260,20 @@ function selectPlant(plant) {
     const plantNameInput = document.getElementById('plant-name');
     const plantSpeciesInput = document.getElementById('plant-species');
     const waterFrequencyInput = document.getElementById('water-frequency');
-    
+
     // Fill in the data
     if (plantNameInput) {
         plantNameInput.value = plant.common_name || '';
     }
-    
+
     if (plantSpeciesInput) {
         plantSpeciesInput.value = plant.scientific_name?.[0] || '';
     }
-    
+
     if (waterFrequencyInput && plant.watering) {
         waterFrequencyInput.value = convertWateringToDays(plant.watering);
     }
-    
+
     // Close modal
     closeModal();
 }
@@ -297,15 +300,15 @@ async function getPlants() {
             console.error('No user logged in');
             return [];
         }
-        
+
         const { data: plants, error } = await sb
             .from('plants')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
-        
+
         if (error) throw error;
-        
+
         return plants || [];
     } catch (error) {
         console.error('Error fetching plants:', error);
@@ -323,7 +326,7 @@ async function addPlant(plantData) {
             alert('Musisz być zalogowany, aby dodać roślinę.');
             return null;
         }
-        
+
         const { data, error } = await sb
             .from('plants')
             .insert([{
@@ -337,11 +340,12 @@ async function addPlant(plantData) {
                 care_level: plantData.care_level || null,
                 toxicity: plantData.toxicity !== undefined ? plantData.toxicity : null,
                 description: plantData.description || null,
+                purchase_date: plantData.purchase_date || null,
             }])
             .select();
-        
+
         if (error) throw error;
-        
+
         return data[0];
     } catch (error) {
         console.error('Error adding plant:', error);
@@ -360,9 +364,9 @@ async function getPlantById(plantId) {
             .select('*')
             .eq('id', plantId)
             .single();
-        
+
         if (error) throw error;
-        
+
         return plant;
     } catch (error) {
         console.error('Error fetching plant details:', error);
@@ -379,11 +383,11 @@ async function updatePlant(plantId, updates) {
         const { data, error } = await sb
             .from('plants')
             .update(updates)
-            .eq('id', plantId)
+            .eq('id', String(plantId))
             .select();
-        
+
         if (error) throw error;
-        
+
         return data[0];
     } catch (error) {
         console.error('Error updating plant:', error);
@@ -401,14 +405,77 @@ async function deletePlant(plantId) {
             .from('plants')
             .delete()
             .eq('id', plantId);
-        
+
         if (error) throw error;
-        
+
         return true;
     } catch (error) {
         console.error('Error deleting plant:', error);
         alert('Błąd podczas usuwania rośliny: ' + error.message);
         return false;
+    }
+}
+
+// ========================================
+// 4b. CARE LOGS DATA MANAGEMENT
+// ========================================
+
+/**
+ * Get all care logs for a specific plant
+ * @param {string} plantId - UUID of the plant
+ * @returns {array} - Array of care log objects
+ */
+async function getPlantLogs(plantId) {
+    try {
+        const { data: logs, error } = await sb
+            .from('care_logs')
+            .select('*')
+            .eq('plant_id', plantId)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        return logs || [];
+    } catch (error) {
+        console.error('Error fetching care logs:', error);
+        return [];
+    }
+}
+
+/**
+ * Add a new care log entry
+ * @param {object} logData - Care log data
+ * @returns {object|null} - Created log or null on error
+ */
+async function addCareLog(logData) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('Musisz być zalogowany, aby dodać wpis.');
+            return null;
+        }
+
+        const { data, error } = await sb
+            .from('care_logs')
+            .insert([{
+                plant_id: logData.plant_id,
+                user_id: user.id,
+                date: logData.date || new Date().toISOString().split('T')[0],
+                type: logData.type,
+                pest_name: logData.pest_name || null,
+                medicine_name: logData.medicine_name || null,
+                concentration: logData.concentration || null,
+                notes: logData.notes || null,
+            }])
+            .select();
+
+        if (error) throw error;
+
+        return data[0];
+    } catch (error) {
+        console.error('Error adding care log:', error);
+        alert('Błąd podczas dodawania wpisu: ' + error.message);
+        return null;
     }
 }
 
@@ -426,15 +493,15 @@ function needsWater(lastWatered, frequency) {
     if (!lastWatered || !frequency) {
         return false;
     }
-    
+
     const lastWateredDate = new Date(lastWatered);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to start of day
     lastWateredDate.setHours(0, 0, 0, 0);
-    
+
     const nextWateringDate = new Date(lastWateredDate);
     nextWateringDate.setDate(nextWateringDate.getDate() + frequency);
-    
+
     return today >= nextWateringDate;
 }
 
@@ -448,17 +515,17 @@ function getWateringStatus(lastWatered, frequency) {
     if (!lastWatered || !frequency) {
         return { status: 'unknown', color: '#666', message: 'Nieznane' };
     }
-    
+
     const lastWateredDate = new Date(lastWatered);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     lastWateredDate.setHours(0, 0, 0, 0);
-    
+
     const nextWateringDate = new Date(lastWateredDate);
     nextWateringDate.setDate(nextWateringDate.getDate() + frequency);
-    
+
     const daysUntilWatering = Math.ceil((nextWateringDate - today) / (1000 * 60 * 60 * 24));
-    
+
     if (daysUntilWatering < 0) {
         return { status: 'overdue', color: '#dc2626', message: '⚠️ Wymaga podlewania!' };
     } else if (daysUntilWatering <= 1) {
@@ -474,11 +541,11 @@ function getWateringStatus(lastWatered, frequency) {
 async function renderDashboard() {
     const plantsContainer = document.getElementById('plants-container');
     const emptyState = document.getElementById('empty-state');
-    
+
     if (!plantsContainer) return;
-    
+
     const plants = await getPlants();
-    
+
     if (plants.length === 0) {
         plantsContainer.classList.add('hidden');
         if (emptyState) {
@@ -486,16 +553,16 @@ async function renderDashboard() {
         }
         return;
     }
-    
+
     // Hide empty state and show grid
     if (emptyState) {
         emptyState.classList.add('hidden');
     }
     plantsContainer.classList.remove('hidden');
-    
+
     // Clear container
     plantsContainer.innerHTML = '';
-    
+
     // Render each plant card
     plants.forEach(plant => {
         const card = createPlantCard(plant);
@@ -509,15 +576,15 @@ async function renderDashboard() {
 function createPlantCard(plant) {
     const card = document.createElement('div');
     card.className = 'plant-card';
-    
+
     const needsWatering = needsWater(plant.last_watered, plant.water_frequency);
     const wateringStatus = getWateringStatus(plant.last_watered, plant.water_frequency);
-    
+
     // Add class for plants that need watering
     if (needsWatering) {
         card.classList.add('needs-water');
     }
-    
+
     card.innerHTML = `
         <div class="plant-card-header">
             <h3>${plant.name}</h3>
@@ -558,14 +625,14 @@ function createPlantCard(plant) {
             </button>
         </div>
     `;
-    
+
     // Make card clickable to go to details (except for buttons)
     card.addEventListener('click', (e) => {
         if (!e.target.closest('button')) {
             window.location.href = `details.html?id=${plant.id}`;
         }
     });
-    
+
     return card;
 }
 
@@ -575,19 +642,27 @@ function createPlantCard(plant) {
 async function quickWater(plantId) {
     const today = new Date().toISOString().split('T')[0];
     const result = await updatePlant(plantId, { last_watered: today });
-    
+
     if (result) {
+        // Add care log entry for watering
+        await addCareLog({
+            plant_id: plantId,
+            date: today,
+            type: 'podlewanie',
+            notes: 'Automatyczny zapis po podlaniu',
+        });
+
         // Show success message
         const message = document.createElement('div');
         message.className = 'success-toast';
         message.textContent = '✓ Roślina podlana pomyślnie!';
         document.body.appendChild(message);
-        
+
         setTimeout(() => {
             message.classList.add('fade-out');
             setTimeout(() => message.remove(), 300);
         }, 2000);
-        
+
         // Refresh dashboard
         await renderDashboard();
     }
@@ -599,23 +674,23 @@ async function quickWater(plantId) {
 async function renderPlantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const plantId = urlParams.get('id');
-    
+
     if (!plantId) {
         alert('Nie podano ID rośliny');
         window.location.href = 'dashboard.html';
         return;
     }
-    
+
     const plant = await getPlantById(plantId);
-    
+
     if (!plant) {
         window.location.href = 'dashboard.html';
         return;
     }
-    
+
     // Update page with text-only content
     const wateringStatus = getWateringStatus(plant.last_watered, plant.water_frequency);
-    
+
     // Calculate next watering
     let nextWateringText = 'Nieznane';
     if (plant.last_watered && plant.water_frequency) {
@@ -624,18 +699,18 @@ async function renderPlantDetails() {
         nextWatering.setDate(nextWatering.getDate() + plant.water_frequency);
         nextWateringText = nextWatering.toISOString().split('T')[0];
     }
-    
+
     // Update DOM elements
     document.getElementById('plant-name').textContent = plant.name;
     document.getElementById('plant-species').textContent = `Gatunek: ${plant.species || 'Nieznany'}`;
     document.getElementById('water-frequency').textContent = `Co ${plant.water_frequency || '?'} dni`;
     document.getElementById('last-watered').textContent = plant.last_watered || 'Nieznane';
     document.getElementById('next-watering').textContent = nextWateringText;
-    
+
     const statusElement = document.getElementById('watering-status');
     statusElement.textContent = wateringStatus.message;
     statusElement.style.color = wateringStatus.color;
-    
+
     // Add sunlight info if exists
     if (plant.sunlight) {
         const sunlightEl = document.getElementById('plant-sunlight');
@@ -643,7 +718,7 @@ async function renderPlantDetails() {
             sunlightEl.textContent = plant.sunlight;
         }
     }
-    
+
     // Setup action buttons
     setupDetailButtons(plant.id);
 }
@@ -659,12 +734,19 @@ function setupDetailButtons(plantId) {
             const today = new Date().toISOString().split('T')[0];
             const result = await updatePlant(plantId, { last_watered: today });
             if (result) {
+                // Add care log entry for watering
+                await addCareLog({
+                    plant_id: plantId,
+                    date: today,
+                    type: 'podlewanie',
+                    notes: 'Automatyczny zapis po podlaniu',
+                });
                 alert('Roślina została podlana! 💧');
                 renderPlantDetails(); // Refresh
             }
         };
     }
-    
+
     // Delete button
     const deleteBtn = document.getElementById('delete-btn');
     if (deleteBtn) {
@@ -679,13 +761,19 @@ function setupDetailButtons(plantId) {
             }
         };
     }
-    
-    // Edit button (placeholder for future implementation)
+
+    // Edit button
     const editBtn = document.getElementById('edit-btn');
     if (editBtn) {
         editBtn.onclick = () => {
-            alert('Funkcja edycji będzie dostępna wkrótce!');
+            window.location.href = `edit.html?id=${plantId}`;
         };
+    }
+
+    // Journal link
+    const journalLink = document.getElementById('journal-link');
+    if (journalLink) {
+        journalLink.href = `journal.html?id=${plantId}`;
     }
 }
 
@@ -694,22 +782,407 @@ function setupDetailButtons(plantId) {
  */
 async function handleAddPlantForm(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
-    
+
     // Only collect basic plant data
     const plantData = {
         name: formData.get('name'),
-        species: formData.get('species'),
+        species: formData.get('species') || null,
         water_frequency: parseInt(formData.get('water_frequency')) || null,
-        last_watered: formData.get('last_watered'),
+        last_watered: formData.get('last_watered') || null,
+        purchase_date: formData.get('purchase_date') || null,
     };
-    
+
     const result = await addPlant(plantData);
-    
+
     if (result) {
         alert('Roślina została dodana pomyślnie! 🌱');
         window.location.href = 'dashboard.html';
+    }
+}
+
+/**
+ * Render the journal page for a specific plant
+ */
+async function renderJournal() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantId = urlParams.get('id');
+
+    if (!plantId) {
+        alert('Nie podano ID rośliny.');
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    // Load plant name
+    const plant = await getPlantById(plantId);
+    if (!plant) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    const plantNameEl = document.getElementById('journal-plant-name');
+    if (plantNameEl) {
+        plantNameEl.textContent = `Roślina: ${plant.name}`;
+    }
+
+    // Update back link to point to plant details
+    const backNav = document.querySelector('.back-nav');
+    if (backNav) {
+        backNav.href = `details.html?id=${plantId}`;
+        backNav.textContent = `← Powrót do ${plant.name}`;
+    }
+
+    // Load and render logs
+    const logs = await getPlantLogs(plantId);
+    const logsContainer = document.getElementById('logs-container');
+    const logsEmpty = document.getElementById('logs-empty');
+
+    if (logs.length === 0) {
+        if (logsEmpty) logsEmpty.classList.remove('hidden');
+        if (logsContainer) logsContainer.innerHTML = '';
+        return;
+    }
+
+    if (logsEmpty) logsEmpty.classList.add('hidden');
+
+    // Build a table of logs
+    const typeLabels = {
+        'oprysk': '🧴 Oprysk',
+        'przycinanie': '✂️ Przycinanie',
+        'pasożyty': '🐛 Pasożyty',
+        'nawożenie': '🌱 Nawożenie',
+    };
+
+    let tableHTML = `
+        <div style="overflow-x: auto;">
+        <table class="care-logs-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Typ zabiegu</th>
+                    <th>Szkodnik</th>
+                    <th>Preparat</th>
+                    <th>Stężenie</th>
+                    <th>Notatki</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    logs.forEach(log => {
+        tableHTML += `
+            <tr>
+                <td>${log.date || '—'}</td>
+                <td>${typeLabels[log.type] || log.type}</td>
+                <td>${log.pest_name || '—'}</td>
+                <td>${log.medicine_name || '—'}</td>
+                <td>${log.concentration || '—'}</td>
+                <td>${log.notes || '—'}</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+        </div>
+    `;
+
+    if (logsContainer) {
+        logsContainer.innerHTML = tableHTML;
+    }
+}
+
+/**
+ * Handle care log form submission
+ */
+async function handleCareLogForm(event) {
+    event.preventDefault();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantId = urlParams.get('id');
+
+    if (!plantId) {
+        alert('Nie podano ID rośliny.');
+        return;
+    }
+
+    const formData = new FormData(event.target);
+
+    const logData = {
+        plant_id: plantId,
+        date: formData.get('date'),
+        type: formData.get('type'),
+        pest_name: formData.get('pest_name') || null,
+        medicine_name: formData.get('medicine_name') || null,
+        concentration: formData.get('concentration') || null,
+        notes: formData.get('notes') || null,
+    };
+
+    const result = await addCareLog(logData);
+
+    if (result) {
+        alert('Wpis dodany pomyślnie! 📓');
+        event.target.reset();
+        // Reset date to today
+        const dateInput = document.getElementById('log-date');
+        if (dateInput) dateInput.valueAsDate = new Date();
+        // Refresh logs list
+        await renderJournal();
+    }
+}
+
+/**
+ * Analyze care history using Google Gemini AI
+ * Sends spray/pest logs to Gemini for analysis and displays advice
+ */
+async function analyzeCareHistory() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantId = urlParams.get('id');
+
+    if (!plantId) {
+        alert('Nie podano ID rośliny.');
+        return;
+    }
+
+    const aiResponseDiv = document.getElementById('ai-response');
+    const aiBtn = document.getElementById('ai-analyze-btn');
+
+    // Show loading state
+    if (aiBtn) {
+        aiBtn.disabled = true;
+        aiBtn.textContent = '⏳ Analizuję...';
+    }
+    if (aiResponseDiv) {
+        aiResponseDiv.classList.remove('hidden');
+        aiResponseDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-green);">⏳ Analizuję historię zabiegów...</p>';
+    }
+
+    try {
+        // Get plant info
+        const plant = await getPlantById(plantId);
+        if (!plant) {
+            throw new Error('Nie znaleziono rośliny.');
+        }
+
+        // Get all logs and filter for sprays and pests
+        const allLogs = await getPlantLogs(plantId);
+        const relevantLogs = allLogs.filter(log =>
+            log.type === 'oprysk' || log.type === 'pasożyty'
+        );
+
+        if (relevantLogs.length === 0) {
+            if (aiResponseDiv) {
+                aiResponseDiv.innerHTML = `
+                    <h3>🤖 Analiza AI</h3>
+                    <p>Brak wpisów o opryskach lub szkodnikach do przeanalizowania. 
+                    Dodaj wpisy typu "oprysk" lub "pasożyty", aby otrzymać analizę AI.</p>
+                `;
+            }
+            return;
+        }
+
+        // Build log summary for AI
+        const logsSummary = relevantLogs.map(log => {
+            let entry = `- Data: ${log.date}, Typ: ${log.type}`;
+            if (log.pest_name) entry += `, Szkodnik: ${log.pest_name}`;
+            if (log.medicine_name) entry += `, Preparat: ${log.medicine_name}`;
+            if (log.concentration) entry += `, Stężenie: ${log.concentration}`;
+            if (log.notes) entry += `, Notatki: ${log.notes}`;
+            return entry;
+        }).join('\n');
+
+        const prompt = `Jesteś ekspertem ogrodnikiem i fitopatologiem. Przeanalizuj poniższą historię oprysków i zabiegów przeciw szkodnikom dla rośliny i udziel krótkiej, konkretnej porady po polsku.
+
+Roślina: ${plant.name}
+Gatunek: ${plant.species || 'nieznany'}
+
+Historia zabiegów (opryski i szkodniki):
+${logsSummary}
+
+Oceń:
+1. Czy użyte preparaty i stężenia są odpowiednie dla tego gatunku rośliny?
+2. Czy częstotliwość oprysków jest prawidłowa?
+3. Czy są jakieś zagrożenia lub zalecenia?
+
+Odpowiedz krótko i konkretnie (maks. 200 słów). Użyj emoji do oznaczenia: ✅ poprawne, ⚠️ uwaga, ❌ problem.`;
+
+        // Call Gemini API
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }]
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.error?.message || `Błąd API: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Brak odpowiedzi od AI.';
+
+        // Render AI response (convert basic markdown to HTML)
+        const formattedText = aiText
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+
+        if (aiResponseDiv) {
+            aiResponseDiv.innerHTML = `
+                <h3>🤖 Analiza AI</h3>
+                <div class="ai-text">${formattedText}</div>
+                <p class="ai-disclaimer">⚠️ Porada wygenerowana przez AI. Zawsze konsultuj się z profesjonalistą.</p>
+            `;
+        }
+
+    } catch (error) {
+        console.error('AI analysis error:', error);
+        if (aiResponseDiv) {
+            aiResponseDiv.innerHTML = `
+                <h3>🤖 Analiza AI</h3>
+                <p style="color: #dc2626;">❌ Błąd analizy: ${error.message}</p>
+                <p style="color: #666; font-size: 0.9rem;">Sprawdź klucz API Gemini w pliku app.js.</p>
+            `;
+        }
+    } finally {
+        // Reset button
+        if (aiBtn) {
+            aiBtn.disabled = false;
+            aiBtn.textContent = '🤖 Analizuj historię przez AI';
+        }
+    }
+}
+
+/**
+ * Initialize the edit plant page
+ */
+async function initEditPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantId = urlParams.get('id');
+
+    if (!plantId) {
+        alert('Nie podano ID rośliny.');
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    // Set back link to details page
+    const backLink = document.getElementById('back-link');
+    if (backLink) {
+        backLink.href = `details.html?id=${plantId}`;
+    }
+
+    // Fetch plant data
+    const plant = await getPlantById(plantId);
+    if (!plant) {
+        alert('Nie znaleziono rośliny.');
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    // Pre-fill form fields
+    const nameInput = document.getElementById('plant-name');
+    const speciesInput = document.getElementById('plant-species');
+    const waterFreqInput = document.getElementById('water-frequency');
+    const lastWateredInput = document.getElementById('last-watered');
+    const purchaseDateInput = document.getElementById('purchase-date');
+
+    if (nameInput) nameInput.value = plant.name || '';
+    if (speciesInput) speciesInput.value = plant.species || '';
+    if (waterFreqInput) waterFreqInput.value = plant.water_frequency || '';
+    if (lastWateredInput) lastWateredInput.value = plant.last_watered || '';
+    if (purchaseDateInput) purchaseDateInput.value = plant.purchase_date || '';
+
+    // Handle form submission
+    const editForm = document.getElementById('edit-plant-form');
+    if (editForm) {
+        editForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+
+            const updates = {
+                name: formData.get('name') || null,
+                species: formData.get('species') || null,
+                water_frequency: parseInt(formData.get('water_frequency')) || null,
+                last_watered: formData.get('last_watered') || null,
+                purchase_date: formData.get('purchase_date') || null,
+            };
+
+            const result = await updatePlant(plantId, updates);
+
+            if (result) {
+                alert('Zmiany zostały zapisane! ✅');
+                window.location.href = `details.html?id=${plantId}`;
+            }
+        });
+    }
+}
+
+/**
+ * Toggle care log form fields based on selected type
+ * - przycinanie: hide pest_name, medicine_name, concentration
+ * - pasożyty: show all fields
+ * - oprysk / nawożenie: show medicine_name, concentration; hide pest_name
+ * - no selection: hide all three
+ */
+function toggleCareLogFields() {
+    const typeSelect = document.getElementById('log-type');
+    const pestField = document.getElementById('field-pest-name');
+    const medicineField = document.getElementById('field-medicine-name');
+    const concentrationField = document.getElementById('field-concentration');
+
+    if (!typeSelect || !pestField || !medicineField || !concentrationField) return;
+
+    const type = typeSelect.value;
+
+    // Helper: show/hide a field and manage required attribute on its inputs
+    function toggleField(field, visible) {
+        if (visible) {
+            field.classList.remove('hidden');
+        } else {
+            field.classList.add('hidden');
+            // Clear and remove required from hidden inputs so form validation passes
+            const inputs = field.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.removeAttribute('required');
+                input.value = '';
+            });
+        }
+    }
+
+    switch (type) {
+        case 'przycinanie':
+            toggleField(pestField, false);
+            toggleField(medicineField, false);
+            toggleField(concentrationField, false);
+            break;
+        case 'pasożyty':
+            toggleField(pestField, true);
+            toggleField(medicineField, true);
+            toggleField(concentrationField, true);
+            break;
+        case 'oprysk':
+        case 'nawożenie':
+            toggleField(pestField, false);
+            toggleField(medicineField, true);
+            toggleField(concentrationField, true);
+            break;
+        default:
+            // No selection — hide optional fields
+            toggleField(pestField, false);
+            toggleField(medicineField, false);
+            toggleField(concentrationField, false);
+            break;
     }
 }
 
@@ -722,12 +1195,12 @@ async function handleAddPlantForm(event) {
  */
 document.addEventListener('DOMContentLoaded', async () => {
     const currentPage = window.location.pathname.split('/').pop();
-    
+
     // Check authentication for protected pages
-    if (['dashboard.html', 'add.html', 'details.html'].includes(currentPage)) {
+    if (['dashboard.html', 'add.html', 'details.html', 'journal.html', 'edit.html'].includes(currentPage)) {
         await checkAuthentication();
     }
-    
+
     // Page-specific initialization
     switch (currentPage) {
         case 'index.html':
@@ -737,68 +1210,68 @@ document.addEventListener('DOMContentLoaded', async () => {
             const registerBtn = document.getElementById('register-btn');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
-            
+
             if (loginBtn) {
                 loginBtn.addEventListener('click', async () => {
                     const email = emailInput?.value || '';
                     const password = passwordInput?.value || '';
-                    
+
                     if (!email || !password) {
                         alert('Podaj email i hasło!');
                         return;
                     }
-                    
+
                     await loginUser(email, password);
                 });
             }
-            
+
             if (registerBtn) {
                 registerBtn.addEventListener('click', async () => {
                     const email = emailInput?.value || '';
                     const password = passwordInput?.value || '';
-                    
+
                     if (!email || !password) {
                         alert('Podaj email i hasło!');
                         return;
                     }
-                    
+
                     if (password.length < 6) {
                         alert('Hasło musi mieć minimum 6 znaków!');
                         return;
                     }
-                    
+
                     await registerUser(email, password);
                 });
             }
             break;
-            
+
         case 'dashboard.html':
             await renderDashboard();
             break;
-            
+
         case 'details.html':
             await renderPlantDetails();
             break;
-            
+
         case 'add.html':
             // Set default date to today
             const lastWateredInput = document.getElementById('last-watered');
             if (lastWateredInput) {
                 lastWateredInput.valueAsDate = new Date();
             }
-            
+
             // Setup plant search button
             const searchPlantBtn = document.getElementById('search-plant-btn');
             if (searchPlantBtn) {
                 searchPlantBtn.addEventListener('click', handlePlantSearch);
             }
-            
+
             // Setup modal close button
             const closeModalBtn = document.querySelector('.close-modal');
             if (closeModalBtn) {
                 closeModalBtn.addEventListener('click', closeModal);
             }
-            
+
             // Close modal on outside click
             const modal = document.getElementById('plant-modal');
             if (modal) {
@@ -808,15 +1281,49 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
             }
-            
+
             // Setup form submission
             const addPlantForm = document.getElementById('add-plant-form');
             if (addPlantForm) {
                 addPlantForm.addEventListener('submit', handleAddPlantForm);
             }
             break;
+
+        case 'journal.html':
+            // Set default date to today
+            const logDateInput = document.getElementById('log-date');
+            if (logDateInput) {
+                logDateInput.valueAsDate = new Date();
+            }
+
+            // Setup dynamic field visibility based on type selection
+            const logTypeSelect = document.getElementById('log-type');
+            if (logTypeSelect) {
+                logTypeSelect.addEventListener('change', toggleCareLogFields);
+                toggleCareLogFields(); // Set initial state
+            }
+
+            // Setup form submission
+            const careLogForm = document.getElementById('care-log-form');
+            if (careLogForm) {
+                careLogForm.addEventListener('submit', handleCareLogForm);
+            }
+
+            // Render existing logs
+            await renderJournal();
+
+            // Setup AI analyze button
+            const aiAnalyzeBtn = document.getElementById('ai-analyze-btn');
+            if (aiAnalyzeBtn) {
+                aiAnalyzeBtn.addEventListener('click', analyzeCareHistory);
+            }
+            break;
+
+        case 'edit.html':
+            await initEditPage();
+            break;
     }
-    
+
     // Setup logout button (available on all authenticated pages)
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
@@ -834,17 +1341,21 @@ window.plantGuardian = {
     loginUser,
     logoutUser,
     getCurrentUser,
-    
+
     // Plants
     getPlants,
     addPlant,
     getPlantById,
     updatePlant,
     deletePlant,
-    
+
+    // Care Logs
+    getPlantLogs,
+    addCareLog,
+
     // API
     searchPlantImage,
-    
+
     // Watering
     needsWater,
     getWateringStatus,

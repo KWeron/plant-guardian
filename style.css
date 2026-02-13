@@ -13,14 +13,14 @@
     --light-text: #ffffff;
     --accent-orange: #d97706;
     --shadow: rgba(0, 0, 0, 0.1);
-    
+
     /* Spacing */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
-    
+
     /* Border Radius */
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -182,9 +182,9 @@ nav a:hover {
     background: #b45309;
 }
 
-.btn-accent::before {
+/* .btn-accent::before {
     content: "🔍";
-}
+} */
 
 /* Dashboard Grid - CSS Grid */
 .plants-grid {
@@ -217,9 +217,12 @@ nav a:hover {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         border-color: #dc2626;
     }
+
     50% {
         border-color: #ef4444;
     }
@@ -230,6 +233,7 @@ nav a:hover {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -278,8 +282,15 @@ nav a:hover {
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 .plant-card-actions {
@@ -320,6 +331,7 @@ nav a:hover {
         transform: translateX(400px);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -331,6 +343,7 @@ nav a:hover {
         transform: translateX(0);
         opacity: 1;
     }
+
     to {
         transform: translateX(400px);
         opacity: 0;
@@ -645,26 +658,101 @@ footer {
     padding: var(--spacing-xl);
 }
 
+/* Care Logs Table */
+.care-logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--light-text);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.care-logs-table thead {
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+    color: var(--light-text);
+}
+
+.care-logs-table th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.care-logs-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--pale-green);
+    color: var(--dark-text);
+}
+
+.care-logs-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.care-logs-table tbody tr:hover {
+    background-color: var(--pale-green);
+}
+
+.care-logs-table tbody tr:nth-child(even) {
+    background-color: rgba(183, 228, 199, 0.2);
+}
+
+.care-logs-table tbody tr:nth-child(even):hover {
+    background-color: var(--pale-green);
+}
+
+/* AI Response Container */
+.ai-response-container {
+    margin-top: 2rem;
+    padding: var(--spacing-lg);
+    background: var(--light-text);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px var(--shadow);
+    border-left: 4px solid var(--secondary-green);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.ai-response-container h3 {
+    color: var(--primary-green);
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.3rem;
+}
+
+.ai-response-container .ai-text {
+    line-height: 1.8;
+    color: var(--dark-text);
+    margin-bottom: var(--spacing-md);
+}
+
+.ai-response-container .ai-disclaimer {
+    font-size: 0.85rem;
+    color: #888;
+    border-top: 1px solid var(--pale-green);
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     nav .nav-container {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
-    
+
     nav ul {
         flex-wrap: wrap;
         justify-content: center;
     }
-    
+
     .hero h1 {
         font-size: 2rem;
     }
-    
+
     .plants-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
-    
+
     .form-container {
         padding: var(--spacing-md);
     }
