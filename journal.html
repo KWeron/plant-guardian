@@ -74,7 +74,11 @@
                     <textarea id="log-notes" name="notes" rows="3" placeholder="Dodatkowe informacje..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Dodaj wpis</button>
+                <input type="hidden" id="log-id" name="log_id" value="">
+                <button type="submit" id="care-log-submit-btn" class="btn btn-primary" style="width: 100%;">Dodaj
+                    wpis</button>
+                <button type="button" id="care-log-cancel-btn" class="btn btn-secondary hidden"
+                    style="width: 100%; margin-top: 0.5rem;" onclick="cancelEditMode()">Anuluj edycję</button>
             </form>
         </div>
 

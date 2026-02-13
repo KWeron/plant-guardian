@@ -479,6 +479,66 @@ async function addCareLog(logData) {
     }
 }
 
+/**
+ * Delete a care log entry by ID
+ * @param {string} logId - UUID of the care log to delete
+ * @returns {boolean} - True on success, false on error
+ */
+async function deleteCareLog(logId) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('Musisz być zalogowany, aby usunąć wpis.');
+            return false;
+        }
+
+        const { error } = await sb
+            .from('care_logs')
+            .delete()
+            .eq('id', logId)
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        return true;
+    } catch (error) {
+        console.error('Error deleting care log:', error);
+        alert('Błąd podczas usuwania wpisu: ' + error.message);
+        return false;
+    }
+}
+
+/**
+ * Update an existing care log entry
+ * @param {string} logId - UUID of the care log to update
+ * @param {object} updatedData - Fields to update (e.g. type, notes, pest_name, etc.)
+ * @returns {object|null} - Updated log object or null on error
+ */
+async function updateCareLog(logId, updatedData) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('Musisz być zalogowany, aby edytować wpis.');
+            return null;
+        }
+
+        const { data, error } = await sb
+            .from('care_logs')
+            .update(updatedData)
+            .eq('id', logId)
+            .eq('user_id', user.id)
+            .select();
+
+        if (error) throw error;
+
+        return data[0];
+    } catch (error) {
+        console.error('Error updating care log:', error);
+        alert('Błąd podczas aktualizacji wpisu: ' + error.message);
+        return null;
+    }
+}
+
 // ========================================
 // 5. UI RENDERING FUNCTIONS
 // ========================================
@@ -866,6 +926,7 @@ async function renderJournal() {
                     <th>Preparat</th>
                     <th>Stężenie</th>
                     <th>Notatki</th>
+                    <th>Akcje</th>
                 </tr>
             </thead>
             <tbody>
@@ -880,6 +941,10 @@ async function renderJournal() {
                 <td>${log.medicine_name || '—'}</td>
                 <td>${log.concentration || '—'}</td>
                 <td>${log.notes || '—'}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-small btn-danger" onclick="handleDeleteLog('${log.id}')" title="Usuń wpis">🗑️</button>
+                    <button class="btn btn-small btn-secondary" onclick="prepareLogEdit('${log.id}')" title="Edytuj wpis">✏️</button>
+                </td>
             </tr>
         `;
     });
@@ -896,6 +961,117 @@ async function renderJournal() {
 }
 
 /**
+ * Handle deleting a care log entry with confirmation
+ * @param {string} logId - UUID of the log to delete
+ */
+async function handleDeleteLog(logId) {
+    if (!confirm('Czy na pewno chcesz usunąć ten wpis?')) {
+        return;
+    }
+
+    const success = await deleteCareLog(logId);
+    if (success) {
+        alert('Wpis został usunięty. 🗑️');
+        await renderJournal();
+    }
+}
+
+/**
+ * Prepare the form for editing an existing care log entry
+ * Fetches the log by ID from Supabase and populates the form fields
+ * @param {string} logId - UUID of the log to edit
+ */
+async function prepareLogEdit(logId) {
+    try {
+        // Fetch the log entry from Supabase
+        const { data, error } = await sb
+            .from('care_logs')
+            .select('*')
+            .eq('id', logId)
+            .single();
+
+        if (error) throw error;
+        if (!data) {
+            alert('Nie znaleziono wpisu.');
+            return;
+        }
+
+        const log = data;
+
+        // Set hidden log_id field
+        const logIdInput = document.getElementById('log-id');
+        if (logIdInput) logIdInput.value = log.id;
+
+        // Populate form fields with existing data
+        const dateInput = document.getElementById('log-date');
+        const typeSelect = document.getElementById('log-type');
+        const pestInput = document.getElementById('log-pest-name');
+        const medicineInput = document.getElementById('log-medicine-name');
+        const concentrationInput = document.getElementById('log-concentration');
+        const notesInput = document.getElementById('log-notes');
+
+        if (dateInput) dateInput.value = log.date || '';
+        if (typeSelect) {
+            typeSelect.value = log.type || '';
+            toggleCareLogFields(); // update field visibility for the selected type
+        }
+        if (pestInput) pestInput.value = log.pest_name || '';
+        if (medicineInput) medicineInput.value = log.medicine_name || '';
+        if (concentrationInput) concentrationInput.value = log.concentration || '';
+        if (notesInput) notesInput.value = log.notes || '';
+
+        // Change submit button text
+        const submitBtn = document.getElementById('care-log-submit-btn');
+        if (submitBtn) submitBtn.textContent = 'Zapisz zmiany';
+
+        // Show cancel button
+        const cancelBtn = document.getElementById('care-log-cancel-btn');
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+        // Scroll to the form
+        const form = document.getElementById('care-log-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (error) {
+        console.error('Error preparing log edit:', error);
+        alert('Błąd podczas ładowania wpisu: ' + error.message);
+    }
+}
+
+/**
+ * Cancel edit mode and reset form back to "add" mode
+ */
+function cancelEditMode() {
+    // Clear hidden log_id
+    const logIdInput = document.getElementById('log-id');
+    if (logIdInput) logIdInput.value = '';
+
+    const form = document.getElementById('care-log-form');
+    if (form) form.reset();
+
+    // Reset date to today
+    const dateInput = document.getElementById('log-date');
+    if (dateInput) dateInput.valueAsDate = new Date();
+
+    // Reset button text
+    const submitBtn = document.getElementById('care-log-submit-btn');
+    if (submitBtn) submitBtn.textContent = 'Dodaj wpis';
+
+    // Hide cancel button
+    const cancelBtn = document.getElementById('care-log-cancel-btn');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+
+    // Reset field visibility
+    toggleCareLogFields();
+}
+
+// Make handlers available globally for inline onclick
+window.handleDeleteLog = handleDeleteLog;
+window.deleteCareLog = deleteCareLog;
+window.prepareLogEdit = prepareLogEdit;
+window.cancelEditMode = cancelEditMode;
+
+/**
  * Handle care log form submission
  */
 async function handleCareLogForm(event) {
@@ -910,9 +1086,9 @@ async function handleCareLogForm(event) {
     }
 
     const formData = new FormData(event.target);
+    const logId = formData.get('log_id');
 
     const logData = {
-        plant_id: plantId,
         date: formData.get('date'),
         type: formData.get('type'),
         pest_name: formData.get('pest_name') || null,
@@ -921,16 +1097,29 @@ async function handleCareLogForm(event) {
         notes: formData.get('notes') || null,
     };
 
-    const result = await addCareLog(logData);
+    let result;
 
-    if (result) {
-        alert('Wpis dodany pomyślnie! 📓');
-        event.target.reset();
-        // Reset date to today
-        const dateInput = document.getElementById('log-date');
-        if (dateInput) dateInput.valueAsDate = new Date();
-        // Refresh logs list
-        await renderJournal();
+    if (logId) {
+        // Edit mode — update existing log
+        result = await updateCareLog(logId, logData);
+        if (result) {
+            alert('Wpis został zaktualizowany! ✏️');
+            cancelEditMode();
+            await renderJournal();
+        }
+    } else {
+        // Add mode — create new log
+        logData.plant_id = plantId;
+        result = await addCareLog(logData);
+        if (result) {
+            alert('Wpis dodany pomyślnie! 📓');
+            event.target.reset();
+            // Reset date to today
+            const dateInput = document.getElementById('log-date');
+            if (dateInput) dateInput.valueAsDate = new Date();
+            // Refresh logs list
+            await renderJournal();
+        }
     }
 }
 
