@@ -14,8 +14,5 @@ const CONFIG = {
     SUPABASE_ANON_KEY: 'TUTAJ_KLUCZ_SUPABASE',
     
     // Klucz API z https://perenual.com/docs/api
-    PERENUAL_API_KEY: 'TUTAJ_KLUCZ_PERENUAL',
-    
-    // Klucz API z https://aistudio.google.com/app/apikey
-    GEMINI_API_KEY: 'TUTAJ_KLUCZ_GEMINI'
+    PERENUAL_API_KEY: 'TUTAJ_KLUCZ_PERENUAL'
 };

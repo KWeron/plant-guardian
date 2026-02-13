@@ -16,9 +16,6 @@ const SUPABASE_ANON_KEY = CONFIG.SUPABASE_ANON_KEY;
 // Perenual API Key from CONFIG
 const PERENUAL_API_KEY = CONFIG.PERENUAL_API_KEY;
 
-// Google Gemini API Key from CONFIG
-const GEMINI_API_KEY = CONFIG.GEMINI_API_KEY;
-
 // Initialize Supabase Client
 let sb;
 if (typeof window !== 'undefined' && window.supabase) {
@@ -834,7 +831,7 @@ async function renderJournal() {
     const backNav = document.querySelector('.back-nav');
     if (backNav) {
         backNav.href = `details.html?id=${plantId}`;
-        backNav.textContent = `← Powrót do ${plant.name}`;
+        backNav.textContent = `Powrót do ${plant.name}`;
     }
 
     // Load and render logs
@@ -934,134 +931,6 @@ async function handleCareLogForm(event) {
         if (dateInput) dateInput.valueAsDate = new Date();
         // Refresh logs list
         await renderJournal();
-    }
-}
-
-/**
- * Analyze care history using Google Gemini AI
- * Sends spray/pest logs to Gemini for analysis and displays advice
- */
-async function analyzeCareHistory() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const plantId = urlParams.get('id');
-
-    if (!plantId) {
-        alert('Nie podano ID rośliny.');
-        return;
-    }
-
-    const aiResponseDiv = document.getElementById('ai-response');
-    const aiBtn = document.getElementById('ai-analyze-btn');
-
-    // Show loading state
-    if (aiBtn) {
-        aiBtn.disabled = true;
-        aiBtn.textContent = '⏳ Analizuję...';
-    }
-    if (aiResponseDiv) {
-        aiResponseDiv.classList.remove('hidden');
-        aiResponseDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-green);">⏳ Analizuję historię zabiegów...</p>';
-    }
-
-    try {
-        // Get plant info
-        const plant = await getPlantById(plantId);
-        if (!plant) {
-            throw new Error('Nie znaleziono rośliny.');
-        }
-
-        // Get all logs and filter for sprays and pests
-        const allLogs = await getPlantLogs(plantId);
-        const relevantLogs = allLogs.filter(log =>
-            log.type === 'oprysk' || log.type === 'pasożyty'
-        );
-
-        if (relevantLogs.length === 0) {
-            if (aiResponseDiv) {
-                aiResponseDiv.innerHTML = `
-                    <h3>🤖 Analiza AI</h3>
-                    <p>Brak wpisów o opryskach lub szkodnikach do przeanalizowania. 
-                    Dodaj wpisy typu "oprysk" lub "pasożyty", aby otrzymać analizę AI.</p>
-                `;
-            }
-            return;
-        }
-
-        // Build log summary for AI
-        const logsSummary = relevantLogs.map(log => {
-            let entry = `- Data: ${log.date}, Typ: ${log.type}`;
-            if (log.pest_name) entry += `, Szkodnik: ${log.pest_name}`;
-            if (log.medicine_name) entry += `, Preparat: ${log.medicine_name}`;
-            if (log.concentration) entry += `, Stężenie: ${log.concentration}`;
-            if (log.notes) entry += `, Notatki: ${log.notes}`;
-            return entry;
-        }).join('\n');
-
-        const prompt = `Jesteś ekspertem ogrodnikiem i fitopatologiem. Przeanalizuj poniższą historię oprysków i zabiegów przeciw szkodnikom dla rośliny i udziel krótkiej, konkretnej porady po polsku.
-
-Roślina: ${plant.name}
-Gatunek: ${plant.species || 'nieznany'}
-
-Historia zabiegów (opryski i szkodniki):
-${logsSummary}
-
-Oceń:
-1. Czy użyte preparaty i stężenia są odpowiednie dla tego gatunku rośliny?
-2. Czy częstotliwość oprysków jest prawidłowa?
-3. Czy są jakieś zagrożenia lub zalecenia?
-
-Odpowiedz krótko i konkretnie (maks. 200 słów). Użyj emoji do oznaczenia: ✅ poprawne, ⚠️ uwaga, ❌ problem.`;
-
-        // Call Gemini API
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }]
-                })
-            }
-        );
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.error?.message || `Błąd API: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Brak odpowiedzi od AI.';
-
-        // Render AI response (convert basic markdown to HTML)
-        const formattedText = aiText
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>');
-
-        if (aiResponseDiv) {
-            aiResponseDiv.innerHTML = `
-                <h3>🤖 Analiza AI</h3>
-                <div class="ai-text">${formattedText}</div>
-                <p class="ai-disclaimer">⚠️ Porada wygenerowana przez AI. Zawsze konsultuj się z profesjonalistą.</p>
-            `;
-        }
-
-    } catch (error) {
-        console.error('AI analysis error:', error);
-        if (aiResponseDiv) {
-            aiResponseDiv.innerHTML = `
-                <h3>🤖 Analiza AI</h3>
-                <p style="color: #dc2626;">❌ Błąd analizy: ${error.message}</p>
-                <p style="color: #666; font-size: 0.9rem;">Sprawdź klucz API Gemini w pliku app.js.</p>
-            `;
-        }
-    } finally {
-        // Reset button
-        if (aiBtn) {
-            aiBtn.disabled = false;
-            aiBtn.textContent = '🤖 Analizuj historię przez AI';
-        }
     }
 }
 
@@ -1314,12 +1183,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Render existing logs
             await renderJournal();
-
-            // Setup AI analyze button
-            const aiAnalyzeBtn = document.getElementById('ai-analyze-btn');
-            if (aiAnalyzeBtn) {
-                aiAnalyzeBtn.addEventListener('click', analyzeCareHistory);
-            }
             break;
 
         case 'edit.html':
@@ -1357,7 +1220,7 @@ window.plantGuardian = {
     addCareLog,
 
     // API
-    searchPlantImage,
+    // searchPlantImage,
 
     // Watering
     needsWater,
