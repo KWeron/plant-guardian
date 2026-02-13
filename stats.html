@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statystyki - Plant Guardian</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">Plant Guardian</a>
+            <ul>
+                <li><a href="dashboard.html">Moje rośliny</a></li>
+                <li><a href="add.html">Dodaj roślinę</a></li>
+                <li><a href="stats.html">Statystyki</a></li>
+                <li><a href="index.html" id="logout-btn">Wyloguj</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="color: var(--primary-green); margin-bottom: 2rem;">📊 Twoje osiągnięcia opiekuna</h1>
+
+        <div class="plants-grid">
+            <div class="plant-card" id="total-plants">
+                <div class="plant-card-header">
+                    <h3>🌿 Liczba roślin</h3>
+                </div>
+                <div class="plant-info">
+                    <div class="info-row">
+                        <span class="info-label">Ogólna liczba roślin:</span>
+                        <span class="info-value" id="total-plants-value">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="plant-card" id="monthly-treatments">
+                <div class="plant-card-header">
+                    <h3>💊 Zabiegi w tym miesiącu</h3>
+                </div>
+                <div class="plant-info">
+                    <div class="info-row">
+                        <span class="info-label">Liczba zabiegów:</span>
+                        <span class="info-value" id="monthly-treatments-value">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="plant-card" id="oldest-plant">
+                <div class="plant-card-header">
+                    <h3>🏆 Najstarsza roślina</h3>
+                </div>
+                <div class="plant-info">
+                    <div class="info-row">
+                        <span class="info-label">Nazwa:</span>
+                        <span class="info-value" id="oldest-plant-value">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Plant Guardian. Wszystkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

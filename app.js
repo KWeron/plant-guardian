@@ -539,6 +539,34 @@ async function updateCareLog(logId, updatedData) {
     }
 }
 
+
+/**
+ * Get all care logs for the currently logged-in user
+ * @returns {array} - Array of all care log objects for the user
+ */
+async function getAllUserLogs() {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            console.error('Użytkownik nie jest zalogowany.');
+            return [];
+        }
+
+        const { data: logs, error } = await sb
+            .from('care_logs')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        return logs || [];
+    } catch (error) {
+        console.error('Error fetching all user logs:', error);
+        return [];
+    }
+}
+
 // ========================================
 // 5. UI RENDERING FUNCTIONS
 // ========================================
@@ -961,6 +989,50 @@ async function renderJournal() {
 }
 
 /**
+ * Render statistics on the stats page
+ */
+async function renderStats() {
+    // Fetch all data
+    const plants = await getPlants();
+    const allLogs = await getAllUserLogs();
+
+    // 1. Total number of plants
+    const totalPlantsEl = document.getElementById('total-plants-value');
+    if (totalPlantsEl) {
+        totalPlantsEl.textContent = plants.length;
+    }
+
+    // 2. Number of care logs in the current month
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
+
+    const monthlyLogs = allLogs.filter(log => {
+        if (!log.date) return false;
+        const logDate = new Date(log.date);
+        return logDate.getFullYear() === currentYear && logDate.getMonth() === currentMonth;
+    });
+
+    const monthlyTreatmentsEl = document.getElementById('monthly-treatments-value');
+    if (monthlyTreatmentsEl) {
+        monthlyTreatmentsEl.textContent = monthlyLogs.length;
+    }
+
+    // 3. Oldest plant by purchase_date
+    const plantsWithDate = plants.filter(p => p.purchase_date);
+    const oldestPlantEl = document.getElementById('oldest-plant-value');
+
+    if (oldestPlantEl) {
+        if (plantsWithDate.length > 0) {
+            plantsWithDate.sort((a, b) => new Date(a.purchase_date) - new Date(b.purchase_date));
+            oldestPlantEl.textContent = plantsWithDate[0].name;
+        } else {
+            oldestPlantEl.textContent = 'Brak danych';
+        }
+    }
+}
+
+/**
  * Handle deleting a care log entry with confirmation
  * @param {string} logId - UUID of the log to delete
  */
@@ -1258,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentPage = window.location.pathname.split('/').pop();
 
     // Check authentication for protected pages
-    if (['dashboard.html', 'add.html', 'details.html', 'journal.html', 'edit.html'].includes(currentPage)) {
+    if (['dashboard.html', 'add.html', 'details.html', 'journal.html', 'edit.html', 'stats.html'].includes(currentPage)) {
         await checkAuthentication();
     }
 
@@ -1377,6 +1449,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         case 'edit.html':
             await initEditPage();
             break;
+
+        case 'stats.html':
+            await renderStats();
+            break;
     }
 
     // Setup logout button (available on all authenticated pages)
@@ -1407,6 +1483,7 @@ window.plantGuardian = {
     // Care Logs
     getPlantLogs,
     addCareLog,
+    getAllUserLogs,
 
     // API
     // searchPlantImage,
