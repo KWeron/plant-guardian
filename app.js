@@ -6,15 +6,18 @@
 // 1. SETUP - Supabase & API Keys
 // ========================================
 
-// Supabase Configuration (Replace with your actual values)
-const SUPABASE_URL = 'https://kchryjbzelncvriufpre.supabase.co'; // e.g., https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = '';
+// API Keys are now loaded from config.js file
+// Make sure config.js is loaded before this script in your HTML
 
-// Perenual API Key (Replace with your actual key from https://perenual.com/docs/api)
-const PERENUAL_API_KEY = '';
+// Assign values from global CONFIG object
+const SUPABASE_URL = CONFIG.SUPABASE_URL;
+const SUPABASE_ANON_KEY = CONFIG.SUPABASE_ANON_KEY;
 
-// Google Gemini API Key (Replace with your actual key from https://aistudio.google.com/app/apikey)
-const GEMINI_API_KEY = '';
+// Perenual API Key from CONFIG
+const PERENUAL_API_KEY = CONFIG.PERENUAL_API_KEY;
+
+// Google Gemini API Key from CONFIG
+const GEMINI_API_KEY = CONFIG.GEMINI_API_KEY;
 
 // Initialize Supabase Client
 let sb;

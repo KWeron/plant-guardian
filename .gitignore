@@ -1,0 +1,12 @@
+# API Configuration (contains sensitive keys)
+config.js
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
