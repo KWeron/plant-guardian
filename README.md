@@ -144,7 +144,7 @@ Skopiuj i uruchom zawartość pliku, który utworzy:
 
 Aplikacja jest napisana w Vanilla JavaScript i działa bezpośrednio w przeglądarce.
 
-#### Opcja A: VS Code Live Server (zalecane)
+#### VS Code Live Server (zalecane)
 
 1. Zainstaluj rozszerzenie **Live Server** w VS Code
 2. Otwórz folder projektu w VS Code
