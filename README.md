@@ -79,7 +79,7 @@ Plant Guardian to aplikacja webowa do zarządzania kolekcją roślin domowych. �
 ### Krok 1: Klonowanie repozytorium
 
 ```bash
-git clone https://github.com/twoj-username/plant-guardian.git
+git clone https://github.com/KWeron/plant-guardian.git
 cd plant-guardian
 ```
 
