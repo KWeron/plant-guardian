@@ -152,18 +152,6 @@ Aplikacja jest napisana w Vanilla JavaScript i działa bezpośrednio w przegląd
 4. Wybierz **"Open with Live Server"**
 5. Aplikacja otworzy się w przeglądarce pod adresem `http://127.0.0.1:5500`
 
-#### Opcja B: Inne serwery lokalne
-
-```bash
-# Python 3
-python -m http.server 8000
-
-# Node.js (jeśli masz zainstalowany)
-npx http-server
-```
-
-Następnie otwórz w przeglądarce: `http://localhost:8000`
-
 ---
 
 ### Krok 5: Pierwsze użycie
